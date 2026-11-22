@@ -8,25 +8,50 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.view.Gravity
 import android.widget.*
+import android.view.View
 
 class MainActivity : Activity() {
 
-    private val green = Color.rgb(57, 255, 20)
-    private val bg = Color.rgb(5, 8, 7)
-    private val card = Color.rgb(17, 23, 19)
+    private val red = Color.rgb(255, 35, 55)
+    private val bg = Color.rgb(9, 9, 12)
+    private val card = Color.rgb(23, 22, 27)
     private var selected = "Pakistan"
+    private var connected = false
 
-    private lateinit var serverList: LinearLayout
     private lateinit var status: TextView
+    private lateinit var serverBox: LinearLayout
+    private lateinit var connect: TextView
 
-    private fun rounded(color: Int, radius: Float): GradientDrawable {
+    private val countries = listOf(
+        Triple("🇵🇰", "Pakistan", "35 ms"),
+        Triple("🇸🇬", "Singapore", "65 ms"),
+        Triple("🇩🇪", "Germany", "110 ms"),
+        Triple("🇺🇸", "USA", "180 ms"),
+        Triple("🇳🇱", "Netherlands", "125 ms")
+    )
+
+    private fun shape(color: Int, radius: Float): GradientDrawable {
         return GradientDrawable().apply {
             setColor(color)
             cornerRadius = radius
         }
     }
 
-    private fun text(
+    private fun gradient(): GradientDrawable {
+        return GradientDrawable(
+            GradientDrawable.Orientation.TL_BR,
+            intArrayOf(
+                Color.rgb(75, 8, 20),
+                Color.rgb(28, 10, 17),
+                Color.rgb(15, 15, 20)
+            )
+        ).apply {
+            cornerRadius = 28f
+            setStroke(1, Color.rgb(130, 25, 42))
+        }
+    }
+
+    private fun makeText(
         value: String,
         size: Float,
         color: Int,
@@ -36,9 +61,18 @@ class MainActivity : Activity() {
             text = value
             textSize = size
             setTextColor(color)
-            gravity = Gravity.CENTER
+            gravity = Gravity.CENTER_VERTICAL
             if (bold) setTypeface(null, Typeface.BOLD)
         }
+    }
+
+    private fun addSpace(parent: LinearLayout, height: Int) {
+        parent.addView(View(this), LinearLayout.LayoutParams(1, height))
+    }
+
+    private fun addLabel(parent: LinearLayout, value: String) {
+        val t = makeText(value, 17f, Color.WHITE, true)
+        parent.addView(t)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,21 +81,29 @@ class MainActivity : Activity() {
         window.statusBarColor = bg
         window.navigationBarColor = bg
 
+        val scroll = ScrollView(this)
+        scroll.setBackgroundColor(bg)
+
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(22, 22, 22, 24)
-            setBackgroundColor(bg)
+            setPadding(20, 22, 20, 25)
         }
 
-        val scroll = ScrollView(this)
         scroll.addView(root)
 
+        // HEADER
         val header = LinearLayout(this).apply {
-            gravity = Gravity.CENTER_VERTICAL
             orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
 
-        val logo = text("♛", 35f, green, true)
+        val logo = TextView(this).apply {
+            text = "♛"
+            textSize = 38f
+            setTextColor(red)
+            gravity = Gravity.CENTER
+        }
+
         header.addView(logo)
 
         val brand = LinearLayout(this).apply {
@@ -69,156 +111,245 @@ class MainActivity : Activity() {
             setPadding(12, 0, 0, 0)
         }
 
-        brand.addView(text("ALI X CHEATS", 20f, Color.WHITE, true))
-        brand.addView(text("PREMIUM VPN", 11f, green, true))
+        brand.addView(makeText("ALI X CHEATS", 21f, Color.WHITE, true))
+        brand.addView(makeText("RED DEMON EDITION", 10f, red, true))
+
         header.addView(brand)
+
+        val version = TextView(this).apply {
+            text = "V1.0"
+            textSize = 11f
+            setTextColor(red)
+            gravity = Gravity.CENTER
+            background = shape(card, 12f)
+            setPadding(14, 10, 14, 10)
+        }
+
+        header.addView(version, LinearLayout.LayoutParams(
+            -2, -2
+        ).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            weight = 1f
+        })
 
         root.addView(header)
 
-        val line = TextView(this).apply {
-            setBackgroundColor(Color.rgb(35, 65, 39))
-        }
-        root.addView(line, LinearLayout.LayoutParams(
-            -1, 1
-        ).apply { setMargins(0, 22, 0, 25) })
+        addSpace(root, 25)
 
-        root.addView(text("YOUR CONNECTION", 13f, Color.LTGRAY, true))
-        root.addView(text("Private. Fast. Secure.", 23f, Color.WHITE, true))
-
-        root.addView(text(" ", 10f, Color.WHITE))
-
-        status = text("●  NOT CONNECTED", 15f, Color.LTGRAY, true)
-        root.addView(status)
-
-        val connect = TextView(this).apply {
-            text = "⏻"
-            textSize = 52f
+        // HERO BANNER
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setTextColor(Color.BLACK)
-            background = rounded(green, 200f)
-            elevation = 12f
+            background = gradient()
+            setPadding(18, 24, 18, 24)
         }
 
-        root.addView(connect, LinearLayout.LayoutParams(
-            175, 175
+        hero.addView(makeText(
+            "NEXT LEVEL GAMING",
+            12f, red, true
+        ).apply { gravity = Gravity.CENTER })
+
+        addSpace(hero, 10)
+
+        hero.addView(makeText(
+            "ENTER THE BATTLE",
+            27f, Color.WHITE, true
+        ).apply { gravity = Gravity.CENTER })
+
+        hero.addView(makeText(
+            "YOUR CONNECTION. YOUR CONTROL.",
+            11f, Color.LTGRAY, true
         ).apply {
             gravity = Gravity.CENTER
-            setMargins(0, 25, 0, 12)
+            setPadding(0, 8, 0, 0)
         })
 
-        root.addView(text("TAP TO CONNECT", 13f, green, true))
+        root.addView(hero, LinearLayout.LayoutParams(
+            -1, -2
+        ))
+
+        addSpace(root, 25)
+
+        // CONNECTION SECTION
+        addLabel(root, "YOUR VPN CONNECTION")
+        addSpace(root, 12)
+
+        val connectionCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = shape(card, 25f)
+            setPadding(18, 22, 18, 22)
+        }
+
+        status = makeText(
+            "●  NOT CONNECTED",
+            14f, Color.LTGRAY, true
+        ).apply { gravity = Gravity.CENTER }
+
+        connectionCard.addView(status)
+
+        addSpace(connectionCard, 24)
+
+        connect = TextView(this).apply {
+            text = "⏻"
+            textSize = 53f
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(
+                    Color.rgb(255, 45, 65),
+                    Color.rgb(130, 0, 25)
+                )
+            ).apply {
+                shape = GradientDrawable.OVAL
+                setStroke(3, Color.rgb(255, 95, 105))
+            }
+            elevation = 15f
+        }
+
+        connectionCard.addView(connect, LinearLayout.LayoutParams(
+            145, 145
+        ).apply {
+            gravity = Gravity.CENTER
+        })
+
+        addSpace(connectionCard, 18)
+
+        connectionCard.addView(makeText(
+            "TAP TO CONNECT",
+            14f, red, true
+        ).apply { gravity = Gravity.CENTER })
+
+        addSpace(connectionCard, 8)
+
+        connectionCard.addView(makeText(
+            "SELECT A SERVER TO GET STARTED",
+            10f, Color.LTGRAY
+        ).apply { gravity = Gravity.CENTER })
 
         connect.setOnClickListener {
             Toast.makeText(
                 this,
-                "VPN server will be added later!",
+                "VPN servers will be added later!",
                 Toast.LENGTH_LONG
             ).show()
         }
 
-        root.addView(text(" ", 15f, Color.WHITE))
-        root.addView(text("SELECT YOUR SERVER", 19f, Color.WHITE, true))
-        root.addView(text("Choose your preferred location", 12f, Color.LTGRAY))
+        root.addView(connectionCard)
 
-        serverList = LinearLayout(this).apply {
+        addSpace(root, 28)
+
+        // SERVER SECTION
+        addLabel(root, "CHOOSE YOUR SERVER")
+
+        addSpace(root, 5)
+
+        root.addView(makeText(
+            "Select your preferred location",
+            12f, Color.LTGRAY
+        ))
+
+        addSpace(root, 15)
+
+        serverBox = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
         }
 
-        root.addView(serverList)
+        root.addView(serverBox)
 
-        val countries = listOf(
-            Triple("🇵🇰", "Pakistan", "35 ms"),
-            Triple("🇸🇬", "Singapore", "65 ms"),
-            Triple("🇩🇪", "Germany", "110 ms"),
-            Triple("🇺🇸", "USA", "180 ms"),
-            Triple("🇳🇱", "Netherlands", "125 ms")
-        )
+        refreshServers()
 
-        countries.forEach { item ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                setPadding(15, 12, 15, 12)
-                background = rounded(
-                    if (selected == item.second) Color.rgb(25, 48, 28) else card,
-                    18f
-                )
-            }
+        addSpace(root, 25)
 
-            val flag = text(item.first, 28f, Color.WHITE)
-            row.addView(flag)
-
-            val name = text(item.second, 16f, Color.WHITE, true)
-            name.gravity = Gravity.CENTER_VERTICAL
-            name.setPadding(15, 0, 0, 0)
-
-            row.addView(name, LinearLayout.LayoutParams(
-                0, 55, 1f
-            ))
-
-            val ping = text(item.third, 12f, green)
-            row.addView(ping)
-
-            row.setOnClickListener {
-                selected = item.second
-                Toast.makeText(
-                    this,
-                    "$selected selected",
-                    Toast.LENGTH_SHORT
-                ).show()
-                refreshServers(countries)
-            }
-
-            serverList.addView(row, LinearLayout.LayoutParams(
-                -1, -2
-            ).apply {
-                setMargins(0, 9, 0, 5)
-            })
+        // FOOTER
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            background = shape(card, 20f)
+            setPadding(15, 18, 15, 18)
         }
 
-        root.addView(text(" ", 12f, Color.WHITE))
-        root.addView(text(
-            "ALI X CHEATS VPN  •  VERSION 1.0",
-            11f, green, true
-        ))
+        footer.addView(makeText(
+            "♛  ALI X CHEATS VPN",
+            16f, red, true
+        ).apply { gravity = Gravity.CENTER })
+
+        footer.addView(makeText(
+            "NEXT LEVEL GAMING • RED DEMON EDITION",
+            9f, Color.LTGRAY
+        ).apply {
+            gravity = Gravity.CENTER
+            setPadding(0, 8, 0, 0)
+        })
+
+        root.addView(footer)
 
         setContentView(scroll)
     }
 
-    private fun refreshServers(
-        countries: List<Triple<String, String, String>>
-    ) {
-        serverList.removeAllViews()
+    private fun refreshServers() {
+        serverBox.removeAllViews()
 
         countries.forEach { item ->
+
+            val active = selected == item.second
+
             val row = LinearLayout(this).apply {
                 orientation = LinearLayout.HORIZONTAL
                 gravity = Gravity.CENTER_VERTICAL
                 setPadding(15, 12, 15, 12)
-                background = rounded(
-                    if (selected == item.second) Color.rgb(25, 48, 28) else card,
+
+                background = shape(
+                    if (active) Color.rgb(65, 17, 28) else card,
                     18f
                 )
+
+                if (active) {
+                    background = GradientDrawable().apply {
+                        setColor(Color.rgb(65, 17, 28))
+                        cornerRadius = 18f
+                        setStroke(2, red)
+                    }
+                }
             }
 
-            row.addView(text(item.first, 28f, Color.WHITE))
+            row.addView(makeText(
+                item.first, 28f, Color.WHITE
+            ))
 
-            val name = text(item.second, 16f, Color.WHITE, true)
-            name.gravity = Gravity.CENTER_VERTICAL
-            name.setPadding(15, 0, 0, 0)
-            row.addView(name, LinearLayout.LayoutParams(0, 55, 1f))
+            val info = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(13, 0, 0, 0)
+            }
 
-            row.addView(text(item.third, 12f, green))
+            info.addView(makeText(
+                item.second, 16f, Color.WHITE, true
+            ))
+
+            info.addView(makeText(
+                "VPN SERVER",
+                9f, Color.LTGRAY
+            ))
+
+            row.addView(info, LinearLayout.LayoutParams(
+                0, -2, 1f
+            ))
+
+            row.addView(makeText(
+                item.third,
+                12f, red, true
+            ))
 
             row.setOnClickListener {
                 selected = item.second
-                refreshServers(countries)
+                refreshServers()
             }
 
-            serverList.addView(row, LinearLayout.LayoutParams(
+            serverBox.addView(row, LinearLayout.LayoutParams(
                 -1, -2
             ).apply {
-                setMargins(0, 9, 0, 5)
+                setMargins(0, 0, 0, 12)
             })
         }
     }
